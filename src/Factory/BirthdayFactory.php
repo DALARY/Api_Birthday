@@ -47,7 +47,7 @@ final class BirthdayFactory extends ModelFactory
     protected function getDefaults(): array
     {
         return [
-            'birthday' => self::faker()->date(),
+            'birthday' => self::faker()->dateTime(),
             'name' => self::faker()->name(),
         ];
     }
