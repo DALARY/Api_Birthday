@@ -21,7 +21,7 @@ class BirthdayController extends AbstractController
         return new Response($serializerAll);
     }
 
-    #[Route('/birthday/{id}', name: 'app_birthday', methods: ['GET'])]
+    #[Route('/birthday/{id}', name: 'app_birthday_id', methods: ['GET'])]
     public function getById(ManagerRegistry $doctrine, SerializerInterface $serializer, $id): Response
     {
         $birthday = $doctrine->getRepository(Birthday::class)->findOneBy(['id' => $id]);
@@ -49,19 +49,22 @@ class BirthdayController extends AbstractController
     public function edit(EntityManagerInterface $em, ManagerRegistry $doctrine, SerializerInterface $serializer, Request $request, $id): Response
     {
         $birthday = $doctrine->getRepository(Birthday::class)->findOneBy(['id' => $id]);
-        $data = json_decode($request->getContent(), $birthday);
+        $data = json_decode($request->getContent(), true);
+        
+        if (isset($data['name'])) {
+            $birthday->setName($data['name']);
+        }
 
-        return new Response($data);
+        if (isset($data['birthday'])) {
+            $birthday->setBirthday(new \DateTime($data['birthday']));
+        }
 
-        // $birthday->setName($data['name']);
-        // $birthday->setBirthday(new \DateTime($data['birthday']));
+        $em->persist($birthday);
+        $em->flush();
 
-        // $em->persist($birthday);
-        // $em->flush();
+        $jsonBirthday = $serializer->serialize($birthday, 'json');
 
-        // $jsonBirthday = $serializer->serialize($birthday, 'json');
-
-        // return new Response($jsonBirthday);
+        return new Response($jsonBirthday);
     }
 
     #[Route('/birthday/{id}', name: 'app_birthday_delete', methods: ['DELETE'])]
