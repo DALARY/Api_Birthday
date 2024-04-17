@@ -3,7 +3,9 @@
 namespace App\Factory;
 
 use App\Entity\Birthday;
+use App\Entity\User;
 use App\Repository\BirthdayRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Zenstruck\Foundry\ModelFactory;
 use Zenstruck\Foundry\Proxy;
 use Zenstruck\Foundry\RepositoryProxy;
@@ -34,9 +36,13 @@ final class BirthdayFactory extends ModelFactory
      *
      * @todo inject services if required
      */
-    public function __construct()
+
+    private $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
     {
         parent::__construct();
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -46,9 +52,22 @@ final class BirthdayFactory extends ModelFactory
      */
     protected function getDefaults(): array
     {
+        // Récupérer tous les IDs des utilisateurs existants
+        $userRepository = $this->entityManager->getRepository(User::class);
+        $userIds = $userRepository->createQueryBuilder('u')
+            ->select('u.id')
+            ->getQuery()
+            ->getResult();
+
+        // Extraire les IDs
+        $ids = array_map(function ($user) {
+            return $user['id'];
+        }, $userIds);
+
         return [
-            'birthday' => self::faker()->dateTime(),
-            'name' => self::faker()->name(),
+            'user' => $this->faker()->randomElement($ids),
+            'birthday' => $this->faker()->dateTime(),
+            'name' => $this->faker()->name(),
         ];
     }
 
